@@ -5,20 +5,38 @@ spring:
   application:
     name: user-service
 
-  #数据库配置
+  # mysql数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/shop_user_1024?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
 
-#配置plus打印sql日志
+  # redis配置
+  redis:
+    host: 192.168.26.128
+    port: 8000
+
+  # 网易邮箱配置
+  mail:
+    host: smtp.163.com #发送邮件服务器
+    username: 13284043713@163.com #发送邮件的邮箱地址
+    password: QYgEfBgZrUDma392 #客户端授权码，不是邮箱密码,网易的是自己设置的
+    from: 13284043713@163.com # 发送邮件的地址，和上面username一致
+
+    properties.mail.smtp.starttls.enable: true
+    properties.mail.smtp.starttls.required: true
+    properties.mail.smtp.ssl.enable: true
+    default-encoding: utf-8
+
+
+# 配置plus打印sql日志
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 
-#设置日志级别,ERROR/WARN/INFO/DEBUG,默认是INFO以上才显示
+# 设置日志级别,ERROR/WARN/INFO/DEBUG,默认是INFO以上才显示
 logging:
   level:
     root: INFO
