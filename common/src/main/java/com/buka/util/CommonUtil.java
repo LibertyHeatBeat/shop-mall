@@ -1,10 +1,15 @@
 package com.buka.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * @author lhb
@@ -94,5 +99,55 @@ public class CommonUtil {
             sb.append(sources.charAt(random.nextInt(9)));
         }
         return sb.toString();
+    }
+    /**
+    * @Author: lhb
+    * @Description: 生成uuid
+    * @DateTime: 下午10:51 2025/2/14
+    * @Params: []
+    * @Return java.lang.String
+    */
+    public static String generateUUID() {
+        return UUID.randomUUID().toString().replaceAll("-","").substring(0,32);
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 生成指定长度随机字母和数字
+    * @DateTime: 下午2:28 2025/2/16
+    * @Params: 
+    * @Return 
+    */
+    private static final String ALL_CHAR_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    public static String getStringNumRandom(int length) {
+        //生成随机数字和字母,
+        Random random = new Random();
+        StringBuilder saltString = new StringBuilder(length);
+        for (int i = 1; i <= length; ++i) {
+            saltString.append(ALL_CHAR_NUM.charAt(random.nextInt(ALL_CHAR_NUM.length())));
+        }
+        return saltString.toString();
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 将给定的对象转换为 JSON 格式并通过 HTTP 响应发送出去。
+    * @DateTime: 下午3:13 2025/2/16
+    * @Params: [response, obj]
+    * @Return void
+    */
+    public static void sendJsonMessage(HttpServletResponse response, Object obj) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.setContentType("application/json; charset=utf-8");
+
+        try (PrintWriter writer = response.getWriter()) {
+            writer.print(objectMapper.writeValueAsString(obj));
+
+            response.flushBuffer();
+
+        } catch (Exception e) {
+
+        }
     }
 }

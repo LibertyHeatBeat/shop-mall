@@ -7,4 +7,6 @@ import com.buka.util.JsonData;
  */
 public interface NotifyService {
     JsonData sendCode(String email);
+
+    boolean checkCode(String mail, String code);
 }

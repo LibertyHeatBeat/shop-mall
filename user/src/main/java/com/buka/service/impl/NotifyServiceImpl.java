@@ -65,4 +65,30 @@ public class NotifyServiceImpl implements NotifyService {
             return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);
         }
     }
+
+    /**
+    * @Author: lhb
+    * @Description: 验证邮箱和验证码是否匹配
+    * @DateTime: 下午2:08 2025/2/16
+    * @Params: [mail, code]
+    * @Return boolean
+    */
+    @Override
+    public boolean checkCode(String mail, String code) {
+        String key = String.format(CacheKey.CHECK_CODE_KEY, mail);
+        String s = (String) redisTemplate.opsForValue().get(key);
+
+        // 检查缓存的验证码是否存在且不为空
+        if (StringUtils.isNotBlank(s)) {
+            // 比较用户输入的验证码和缓存的验证码是否一致
+            if (code.equals(s.split("_")[0])) {
+                // 验证码匹配，删除redis中的验证码信息
+                redisTemplate.delete(key);
+                return true;
+            }
+        }
+
+        // 验证码不匹配或已过期，返回false
+        return false;
+    }
 }

@@ -1,7 +1,9 @@
 package com.buka.service;
 
+import com.buka.dto.AddressAddDto;
 import com.buka.model.AddressDO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.buka.util.JsonData;
 
 /**
  * <p>
@@ -13,4 +15,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface AddressService extends IService<AddressDO> {
 
+    JsonData add(AddressAddDto addressAddDto);
+
+    JsonData remo(Long id);
+
+    JsonData findUserAllAddress();
 }

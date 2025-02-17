@@ -30,7 +30,17 @@ public enum  BizCodeEnum {
      */
     ACCOUNT_REPEAT(250001,"账号已经存在"),
     ACCOUNT_UNREGISTER(250002,"账号不存在"),
-    ACCOUNT_PWD_ERROR(250003,"账号或者密码错误");
+    ACCOUNT_PWD_ERROR(250003,"账号或者密码错误"),
+    UPLOAD_ERROR(250004, "上传失败"),
+    /**
+     * 优惠卷
+     */
+    COUPON_NOT_EXIST(250005,"优惠券不存在"),
+    COUPON_NO_STOCK(25006,"优惠券库存不足"),
+    COUPON_GET_FAIL(25007,"优惠券领取失败"),
+    COUPON_OUT_OF_TIME(25008,"优惠券已过期"),
+    COUPON_OUT_OF_LIMIT(25009,"优惠券超出领取限制"),
+    NOT_LOGIN(25010, "未登录");
 
     @Getter
     private String message;
