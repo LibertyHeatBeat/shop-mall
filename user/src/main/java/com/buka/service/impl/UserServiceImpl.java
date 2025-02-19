@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.buka.dto.UserRegisterDto;
 import com.buka.enums.BizCodeEnum;
+import com.buka.fegin.CouponFeignService;
 import com.buka.interceptor.LoginInterceptor;
 import com.buka.model.UserDO;
 import com.buka.mapper.UserMapper;
 import com.buka.oss.QinNiuOss;
+import com.buka.request.NewUserCouponRequest;
 import com.buka.service.NotifyService;
 import com.buka.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,6 +38,8 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
+    @Autowired
+    private CouponFeignService couponFeignService;
     @Autowired
     private QinNiuOss qinNiuOss;
     @Autowired
@@ -99,7 +103,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (checkUnique(userRegisterDto.getMail())) {
             //可以注册
             this.save(userDO);
-            return JsonData.buildSuccess();
+            //TODO  发放优惠卷 远程调用
+            NewUserCouponRequest newUserCouponRequest=new NewUserCouponRequest();
+            newUserCouponRequest.setUserId(userDO.getId());
+            newUserCouponRequest.setName(userDO.getName());
+            JsonData jsonData= couponFeignService.newUserCoupon(newUserCouponRequest);
+            return JsonData.buildSuccess(jsonData);
         } else {
             //不可以注册
             return JsonData.buildResult(BizCodeEnum.ACCOUNT_REPEAT);

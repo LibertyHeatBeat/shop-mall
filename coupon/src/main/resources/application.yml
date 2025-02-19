@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: coupon-service
-
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.26.128:8848
 
   # redis配置
   redis:
@@ -17,7 +20,6 @@ spring:
     url: jdbc:mysql://localhost:3306/shop_coupon_1024?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
-
 
 
 

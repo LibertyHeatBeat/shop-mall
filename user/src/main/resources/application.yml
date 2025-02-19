@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: user-service
-
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.26.128:8848
   # mysql数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

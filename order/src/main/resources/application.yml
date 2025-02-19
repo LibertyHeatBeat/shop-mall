@@ -1,9 +1,9 @@
 server:
-  port: 9003
+  port: 9004
 
 spring:
   application:
-    name: product-service
+    name: order-service
   cloud:
     nacos:
       discovery:
@@ -11,7 +11,7 @@ spring:
   # mysql数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/shop_product_1024?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/shop_order_1024?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
 
@@ -19,6 +19,7 @@ spring:
   redis:
     host: 192.168.26.128
     port: 8000
+
 
 # 配置plus打印sql日志
 mybatis-plus:
@@ -30,4 +31,3 @@ mybatis-plus:
 logging:
   level:
     root: INFO
-

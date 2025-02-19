@@ -93,23 +93,15 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
         RLock lock = redissonClient.getLock("lock:coupon:" + couponId);
         lock.lock(10,TimeUnit.SECONDS);
         log.info("加锁成功");
-
-
         try {
-
             //1,获取当前登录用户
             LoginUser loginUser = LoginInterceptor.threadLocal.get();
-
             //2，查询优惠
             CouponDO byId = this.getById(couponId);
-
-            //3,判断优惠卷是否可
+            //3,判断优惠卷是否可用
             this.checkCoupon(byId, loginUser.getId());
-
             //4,扣减库存
             int rows = couponMapper.reduceStock(couponId);
-
-
             if (rows == 1) {
                 //5,保存领劵记录
                 //构建领劵记录
@@ -123,7 +115,6 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
                 couponRecordDO.setId(null);
                 couponRecordService.save(couponRecordDO);
             }
-
         }finally {
             lock.unlock();
         }
@@ -148,7 +139,6 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
         if (!coupon.getPublish().equals(CouponPublishEnum.PUBLISH.name())) {
             throw new BizException(BizCodeEnum.COUPON_GET_FAIL);
         }
-
         //是否在领取时间范围
         long start = coupon.getStartTime().getTime();
         long end = coupon.getEndTime().getTime();
@@ -156,7 +146,6 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
         if (ttl < start || ttl > end){
             throw new BizException(BizCodeEnum.COUPON_OUT_OF_TIME);
         }
-
         //用户是否超过限制
         LambdaQueryWrapper<CouponRecordDO> lambdaQueryWrapper=new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(CouponRecordDO::getUserId,userId);

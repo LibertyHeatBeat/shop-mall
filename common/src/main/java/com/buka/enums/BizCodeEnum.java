@@ -42,7 +42,8 @@ public enum  BizCodeEnum {
     COUPON_OUT_OF_LIMIT(25009,"优惠券超出领取限制"),
     NOT_LOGIN(26001, "未登录"),
     SYSTEM_ERROR(26002,"系统错误"),
-    CART_ITEM_NOT_EXIST(260003,"购物车商品不存在");
+    CART_ITEM_NOT_EXIST(260003,"购物车商品不存在"),
+    ORDER_ERROR(260004,"订单错误");
 
     @Getter
     private String message;
