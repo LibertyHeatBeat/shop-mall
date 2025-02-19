@@ -40,7 +40,9 @@ public enum  BizCodeEnum {
     COUPON_GET_FAIL(25007,"优惠券领取失败"),
     COUPON_OUT_OF_TIME(25008,"优惠券已过期"),
     COUPON_OUT_OF_LIMIT(25009,"优惠券超出领取限制"),
-    NOT_LOGIN(25010, "未登录");
+    NOT_LOGIN(26001, "未登录"),
+    SYSTEM_ERROR(26002,"系统错误"),
+    CART_ITEM_NOT_EXIST(260003,"购物车商品不存在");
 
     @Getter
     private String message;
