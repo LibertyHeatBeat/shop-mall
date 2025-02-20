@@ -83,15 +83,10 @@ public class CouponRecordServiceImpl extends ServiceImpl<CouponRecordMapper, Cou
     */
     @Override
     public JsonData detail(Long recordId) {
-        // 创建查询条件构造器
         LambdaQueryWrapper<CouponRecordDO> lambdaQueryWrapper=new LambdaQueryWrapper<>();
-        // 添加查询条件：根据记录ID查询
         lambdaQueryWrapper.eq(CouponRecordDO::getId,recordId);
-        // 添加查询条件：根据当前登录用户的ID查询，确保用户只能查询自己的优惠券信息
         lambdaQueryWrapper.eq(CouponRecordDO::getUserId,LoginInterceptor.threadLocal.get().getId());
-        // 执行查询，获取符合条件的优惠券记录
         CouponRecordDO one = getOne(lambdaQueryWrapper);
-        // 根据查询结果构建并返回JsonData对象
         return one==null?JsonData.buildError("未查询到记录"):JsonData.buildSuccess(one);
     }
 
@@ -108,23 +103,13 @@ public class CouponRecordServiceImpl extends ServiceImpl<CouponRecordMapper, Cou
         loginUser.setId(newUserCouponRequest.getUserId());
         loginUser.setName(newUserCouponRequest.getName());
         loginInterceptor.threadLocal.set(loginUser);
-
-        // 创建一个Lambda查询包装器，用于查询优惠券数据对象
         LambdaQueryWrapper<CouponDO> lambdaQueryWrapper=new LambdaQueryWrapper<>();
-        // 设置查询条件：优惠券类别为新用户专用
         lambdaQueryWrapper.eq(CouponDO::getCategory, CouponCategoryEnum.NEW_USER.name());
-        // 设置查询条件：优惠券发布状态为已发布
         lambdaQueryWrapper.eq(CouponDO::getPublish, CouponPublishEnum.PUBLISH.name());
-
-        // 使用couponService查询满足条件的优惠券列表
         List<CouponDO> list = couponService.list(lambdaQueryWrapper);
-
-        // 遍历优惠券列表，为每个优惠券添加促销活动
         for (CouponDO couponDO : list) {
             couponService.addPromotion(couponDO.getId());
         }
-
-        // 返回成功操作结果的JsonData对象
         return JsonData.buildSuccess();
     }
 }

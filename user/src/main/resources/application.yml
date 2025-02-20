@@ -58,3 +58,12 @@ minio:
   endpoint: http://192.168.26.128:9000
   accesskey: buka2024
   secretkwy: buka2024
+
+#seata配置
+seata:
+  tx-service-group: ${spring.application.name}-group
+  service:
+    grouplist:
+      buka: 127.0.0.1:8091
+    vgroup-mapping:
+      user-service-group: buka

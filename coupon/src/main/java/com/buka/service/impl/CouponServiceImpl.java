@@ -135,7 +135,6 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
         if (coupon.getStock()<=0){
             throw new BizException(BizCodeEnum.COUPON_NO_STOCK);
         }
-        //判断是否是否发布状态
         if (!coupon.getPublish().equals(CouponPublishEnum.PUBLISH.name())) {
             throw new BizException(BizCodeEnum.COUPON_GET_FAIL);
         }

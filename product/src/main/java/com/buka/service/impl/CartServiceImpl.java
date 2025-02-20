@@ -121,9 +121,7 @@ public class CartServiceImpl implements CartService {
     public JsonData myCart() {
         List<CartItemDO> cartItemDOList = buildCartItem(false);
         CartDO cartDO = new CartDO();
-
         cartDO.setCartItem(cartItemDOList);
-
         return JsonData.buildSuccess(cartDO);
     }
 

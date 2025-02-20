@@ -34,18 +34,11 @@ public class ProductOrderController {
     private ProductOrderService productOrderService;
     @PostMapping("/confirm")
     public void confirmOrder(@RequestBody ConfirmOrderDto confirmOrderDto, HttpServletResponse response) {
-        //1,调用service实现下单   创建订单，创建订单项
         JsonData jsonData = productOrderService.confirmOrder(confirmOrderDto);
-
         if (jsonData.getCode() == 0) {
-            //创建订单成功
-            //唤起支付
             String client = confirmOrderDto.getClientType();
             String payType = confirmOrderDto.getPayType();
-
-            // 根据支付类型和客户端类型选择相应的支付方式
             if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.ALIPAY.name())) {
-                //支付宝支付
                 if (client.equalsIgnoreCase(ClientType.H5.name())) {
                     //h5支付
                 }else if (client.equalsIgnoreCase(ClientType.APP.name())) {

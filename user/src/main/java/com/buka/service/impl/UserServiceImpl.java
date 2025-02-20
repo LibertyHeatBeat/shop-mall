@@ -54,19 +54,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     */
     @Override
     public String upload(MultipartFile multipartFile) {
-        //1,生成文件名字
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         String format = dateTimeFormatter.format(now);
         String fileName = CommonUtil.generateUUID();
-        //获取上传图片原始后缀名
         String originalFilename = multipartFile.getOriginalFilename();
         int i = originalFilename.lastIndexOf(".");
         String substring = originalFilename.substring(i);
         String name=format+"/"+fileName+substring;
-        //2,上传图片
         qinNiuOss.QiNiuUpload(multipartFile,name);
-        //3,返回图片名字
         return "http://srlmydmt4.hb-bkt.clouddn.com/"+name;
     }
 
@@ -80,28 +76,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     public JsonData register(UserRegisterDto userRegisterDto) {
         boolean checkCode = false;
-
         if (StringUtils.isNotBlank(userRegisterDto.getMail())) {
-            //邮箱不为空
             checkCode = notifyService.checkCode(userRegisterDto.getMail(), userRegisterDto.getCode());
         }
-
         if (!checkCode) {
             return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
         }
-
-
-        //拷贝方法
         UserDO userDO = new UserDO();
         BeanUtils.copyProperties(userRegisterDto, userDO);
-        ///密码加密
         userDO.setSecret("$1$"+CommonUtil.getStringNumRandom(8));
         String s = Md5Crypt.md5Crypt(userDO.getPwd().getBytes(), userDO.getSecret());
         userDO.setPwd(s);
-
-        //效验邮箱是否重复
         if (checkUnique(userRegisterDto.getMail())) {
-            //可以注册
             this.save(userDO);
             //TODO  发放优惠卷 远程调用
             NewUserCouponRequest newUserCouponRequest=new NewUserCouponRequest();
@@ -110,7 +96,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             JsonData jsonData= couponFeignService.newUserCoupon(newUserCouponRequest);
             return JsonData.buildSuccess(jsonData);
         } else {
-            //不可以注册
             return JsonData.buildResult(BizCodeEnum.ACCOUNT_REPEAT);
         }
     }
@@ -124,23 +109,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     */
     @Override
     public JsonData login(UserRegisterDto userRegisterDto) {
-        //1,查询用户在不在
         LambdaQueryWrapper<UserDO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserDO::getMail, userRegisterDto.getMail());
         UserDO user = this.getOne(lambdaQueryWrapper);
-
-        //2,判读用户在不在
         if (user != null){
             if (user.getPwd().equals(Md5Crypt.md5Crypt(userRegisterDto.getPwd().getBytes(), user.getSecret()))) {
-                //3,登录成功
-                //4,生成jwt
                 LoginUser loginUser = new LoginUser();
                 BeanUtils.copyProperties(user, loginUser);
                 String jwt = JWTUtil.geneJsonWebToken(loginUser);
-
                 return JsonData.buildSuccess(jwt);
             } else {
-                //4,密码错误
                 return JsonData.buildResult(BizCodeEnum.ACCOUNT_PWD_ERROR);
             }
         }
@@ -149,20 +127,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public JsonData info() {
-        // 获取当前登录用户信息
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
-        // 查询数据
         UserDO user = getById(loginUser.getId());
-
         if (user != null) {
-            // 数据的拷贝
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(user, userVO);
-
-            // 返回数据
             return JsonData.buildSuccess(userVO);
         }
-        // 返回账户未注册的错误信息
         return JsonData.buildResult(BizCodeEnum.ACCOUNT_UNREGISTER);
     }
 
