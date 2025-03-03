@@ -32,6 +32,14 @@ import javax.servlet.http.HttpServletResponse;
 public class ProductOrderController {
     @Autowired
     private ProductOrderService productOrderService;
+    
+    /**
+    * @Author: lhb
+    * @Description: 
+    * @DateTime: 下午4:31 2025/3/3
+    * @Params: [confirmOrderDto, response]
+    * @Return void
+    */
     @PostMapping("/confirm")
     public void confirmOrder(@RequestBody ConfirmOrderDto confirmOrderDto, HttpServletResponse response) {
         JsonData jsonData = productOrderService.confirmOrder(confirmOrderDto);

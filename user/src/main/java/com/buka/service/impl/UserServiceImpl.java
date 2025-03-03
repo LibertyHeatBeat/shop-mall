@@ -18,6 +18,7 @@ import com.buka.util.JWTUtil;
 import com.buka.util.JsonData;
 import com.buka.vo.LoginUser;
 import com.buka.vo.UserVO;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     * @Return com.buka.util.JsonData
     */
     @Override
+    @GlobalTransactional
     public JsonData register(UserRegisterDto userRegisterDto) {
         boolean checkCode = false;
         if (StringUtils.isNotBlank(userRegisterDto.getMail())) {

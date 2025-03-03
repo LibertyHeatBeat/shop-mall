@@ -51,48 +51,33 @@ public class CartServiceImpl implements CartService {
     */
     @Override
     public JsonData addCart(CartItemDto cartItemDto) {
-        // 获取购买数量和产品ID
+        // 获取当前用户
         Integer buyNum = cartItemDto.getBuyNum();
         long productId = cartItemDto.getProductId();
-
-        // 获取当前用户的购物车操作对象
         BoundHashOperations<String, Object, Object> myCartOps = getMyCartOps();
-
-        // 检查购物车中是否已存在该商品
         Object o = myCartOps.get(productId+"");
         String result="";
-
         if (o!=null){
             result=(String) o;
         }
-
-        // 如果购物车中没有该商品信息，则创建新的商品信息对象
+        // 判断购物车中是否存在该商品
         if (StringUtils.isBlank(result)){
-            //购物车没有这个商品
             CartItemDO cartItemDO=new CartItemDO();
-            // 根据产品ID获取产品详细信息
             ProductDO productDO = productService.getById(productId);
-            // 如果产品不存在，抛出业务异常
-            if (productDO==null) throw new BizException(BizCodeEnum.SYSTEM_ERROR);
-
-            // 设置商品信息到购物车项中
+            if (productDO==null) {
+                throw new BizException(BizCodeEnum.SYSTEM_ERROR);
+            }
             cartItemDO.setProductId(productId);
             cartItemDO.setProductPrice(productDO.getAmount());
             cartItemDO.setProductImage(productDO.getCoverImg());
             cartItemDO.setBuyNum(buyNum);
             cartItemDO.setProductTitle(productDO.getTitle());
-
-            // 将新的购物车项添加到购物车中
             myCartOps.put(productId+"", JSON.toJSONString(cartItemDO));
         }else {
-            // 如果购物车中已存在该商品信息，则更新商品数量
             CartItemDO cartItemDO = JSON.parseObject(result, CartItemDO.class);
             cartItemDO.setBuyNum(cartItemDO.getBuyNum()+buyNum);
-            // 更新购物车中的商品信息
             myCartOps.put(productId+"",JSON.toJSONString(cartItemDO));
         }
-
-        // 返回成功响应
         return JsonData.buildSuccess();
     }
 
@@ -127,11 +112,17 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public JsonData changeCart(CartItemDto cartItemDto) {
+        // 获取购物车数据
         BoundHashOperations<String, Object, Object> myCartOps = getMyCartOps();
         Object o = myCartOps.get(cartItemDto.getProductId()+"");
-        if (o==null)throw new BizException(BizCodeEnum.CART_ITEM_NOT_EXIST);
+        // 判断购物车中是否存在该商品
+        if (o==null){
+            throw new BizException(BizCodeEnum.CART_ITEM_NOT_EXIST);
+        }
+        // 获取购物车中的商品
         CartItemDO cartItemDO = JSON.parseObject((String) o, CartItemDO.class);
         cartItemDO.setBuyNum(cartItemDto.getBuyNum());
+        // 更新购物车
         myCartOps.put(cartItemDto.getProductId()+"",JSON.toJSONString(cartItemDO));
         return JsonData.buildSuccess();
     }
@@ -159,14 +150,9 @@ public class CartServiceImpl implements CartService {
     * @Return org.springframework.data.redis.core.BoundHashOperations<java.lang.String,java.lang.Object,java.lang.Object>
     */
     private BoundHashOperations<String, Object, Object> getMyCartOps() {
-        // 获取购物车的键，这个键是根据当前用户确定的，确保每个用户的购物车数据是独立的
         String cartKey = getCartKey();
-
-        // 使用获取到的购物车键，从Redis中获取一个与该键绑定的哈希操作对象
-        // 这个对象提供了丰富的操作方法，用于处理购物车中的商品信息
+        // 获取购物车数据
         BoundHashOperations<String, Object, Object> stringObjectObjectBoundHashOperations = redisTemplate.boundHashOps(cartKey);
-
-        // 返回与购物车键绑定的哈希操作对象，供其他方法使用，执行实际的数据操作
         return stringObjectObjectBoundHashOperations;
     }
 
@@ -185,16 +171,18 @@ public class CartServiceImpl implements CartService {
 
     /**
     * @Author: lhb
-    * @Description:
+    * @Description: 构建购物车
     * @DateTime: 上午9:02 2025/2/19
     * @Params: [b]
     * @Return java.util.List<com.buka.model.CartItemDO>
     */
     private List<CartItemDO> buildCartItem(boolean b) {
+        // 获取购物车数据
         BoundHashOperations<String, Object, Object> myCartOps = getMyCartOps();
         List<Object> values = myCartOps.values();
         List<CartItemDO> list = new ArrayList<>();
         List<Long> ids = new ArrayList<>();
+        // 遍历购物车数据
         for (Object value : values) {
             CartItemDO cartItemDO = JSON.parseObject((String) value, CartItemDO.class);
             list.add(cartItemDO);
