@@ -43,6 +43,7 @@ public class NotifyController {
     private NotifyService notifyService;
 
     /**
+     * 验证码过期时间
      * 临时使用10分钟有效，方便测试
      */
     private static final long CAPTCHA_CODE_EXPIRED = 60 * 1000 * 10;
@@ -70,7 +71,9 @@ public class NotifyController {
         ServletOutputStream os=null;
 
         try {
+            //获取输出流
             os=response.getOutputStream();
+            //将图片写入输出流
             ImageIO.write(image,"jpg",os);
             os.flush();
             os.close();
@@ -106,9 +109,11 @@ public class NotifyController {
     public JsonData sendCode(@RequestParam(value = "email", required = true) String email,
                              @RequestParam(value = "captcha", required = true) String captcha,
                              HttpServletRequest request){
+        //1,获取redis中的验证码
         String key = getCaptchhakey(request);
         String code = redisTemplate.opsForValue().get(key);
         log.info(email+captcha);
+        //2,验证验证码
         if (code != null && captcha != null && code.equalsIgnoreCase(captcha)) {
             redisTemplate.delete(key);
             JsonData jsonData= notifyService.sendCode(email);

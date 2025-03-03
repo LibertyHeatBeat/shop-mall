@@ -1,5 +1,7 @@
 package com.buka.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.buka.enums.BizCodeEnum;
 import lombok.*;
 /**
@@ -72,4 +74,9 @@ public class JsonData {
     public static JsonData buildResult(BizCodeEnum codeEnum){
         return JsonData.buildCodeAndMsg(codeEnum.getCode(),codeEnum.getMessage());
     }
+
+    public <T> T getData(TypeReference<T> typeReference){
+        return JSON.parseObject(JSON.toJSONString(data),typeReference);
+    }
+
 }

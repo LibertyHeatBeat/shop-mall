@@ -3,6 +3,8 @@ package com.buka.service;
 import com.buka.dto.CartItemDto;
 import com.buka.util.JsonData;
 
+import java.util.List;
+
 /**
  * @author lhb
  * @version 1.0
@@ -19,4 +21,6 @@ public interface CartService {
     JsonData changeCart(CartItemDto cartItemDto);
 
     JsonData deleteCart(long productId);
+
+    JsonData confirmOrderCartItems(List<Long> productIdList);
 }

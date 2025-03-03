@@ -24,7 +24,7 @@ public class NotifyServiceImpl implements NotifyService {
     private RedisTemplate redisTemplate;
 
     /**
-     * 验证码的标题
+     * 验证码的主题
      */
     private static final String SUBJECT= "buka验证码";
 
@@ -48,20 +48,32 @@ public class NotifyServiceImpl implements NotifyService {
      */
     @Override
     public JsonData sendCode(String email) {
+        // 生成Redis中存储验证码的key，格式为：check_code:email
         String key = String.format(CacheKey.CHECK_CODE_KEY, email);
+        // 从Redis中获取该邮箱对应的验证码信息
         String s = (String) redisTemplate.opsForValue().get(key);
-        if (StringUtils.isNotBlank(s)){
-            long ttl= Long.parseLong(s.split("_")[1]);
-            if (System.currentTimeMillis() - ttl < 60000){
+        // 如果Redis中存在验证码信息
+        if (StringUtils.isNotBlank(s)) {
+            // 解析验证码信息，获取验证码生成的时间戳
+            long ttl = Long.parseLong(s.split("_")[1]);
+            // 判断验证码是否在60秒内重复发送
+            if (System.currentTimeMillis() - ttl < 60000) {
+                // 如果在60秒内重复发送，返回验证码发送频率限制的错误
                 return JsonData.buildResult(BizCodeEnum.CODE_LIMITED);
             }
         }
+        // 生成一个6位随机验证码
         String code = CommonUtil.getRandomCode(6);
-        redisTemplate.opsForValue().set(key,code+"_"+System.currentTimeMillis(),CODE_EXPIRED, TimeUnit.MILLISECONDS);
-        if (CheckUtil.isEmail(email)){
+        // 将验证码和当前时间戳拼接，存入Redis，并设置过期时间为10分钟
+        redisTemplate.opsForValue().set(key, code + "_" + System.currentTimeMillis(), CODE_EXPIRED, TimeUnit.MILLISECONDS);
+        // 检查邮箱格式是否合法
+        if (CheckUtil.isEmail(email)) {
+            // 如果邮箱合法，发送验证码邮件
             mailService.sendSimpleMail(email, SUBJECT, String.format(CONTENT, code));
+            // 返回操作成功的响应
             return JsonData.buildSuccess();
         } else {
+            // 如果邮箱不合法，返回邮箱格式错误的响应
             return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);
         }
     }

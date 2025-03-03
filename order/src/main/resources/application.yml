@@ -20,6 +20,18 @@ spring:
     host: 192.168.26.128
     port: 8000
 
+  #rabbitmq配置
+  rabbitmq:
+    host: 192.168.26.128 #rabbitmq地址
+    port: 5672 #端口号
+    virtual-host: / #主机
+    username: admin
+    password: admin
+    #开启手动确认
+    listener:
+      simple:
+        acknowledge-mode: manual
+
 
 # 配置plus打印sql日志
 mybatis-plus:
@@ -31,3 +43,23 @@ mybatis-plus:
 logging:
   level:
     root: INFO
+
+#自定义消息队列配置，发送锁定库存消息-》延迟exchange-》lock.queue-》死信exchange-》release.queue
+mqconfig:
+  #延迟队列，不能被监听消费
+  stock_release_delay_queue: stock.release.delay.queue
+
+  #延迟队列的消息过期后转发的队列
+  stock_release_queue: stock.release.queue
+
+  #交换机
+  stock_event_exchange: stock.event.exchange
+
+  #进入延迟队列的路由key
+  stock_release_delay_routing_key: stock.release.delay.routing.key
+
+  #消息过期，进入释放队列的key
+  stock_release_routing_key: stock.release.routing.key
+
+  #消息过期时间,毫秒,测试改为15秒
+  ttl: 15000

@@ -1,6 +1,7 @@
 package com.buka.controller;
 
 
+import com.buka.request.LockProductRequest;
 import com.buka.service.ProductService;
 import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class ProductController {
     }
     /**
     * @Author: lhb
-    * @Description: 轮播图
+    * @Description: 根据ID查看商品详情
     * @DateTime: 下午4:14 2025/2/17
     * @Params: [productId]
     * @Return com.buka.util.JsonData
@@ -42,5 +43,12 @@ public class ProductController {
     public JsonData detail(@PathVariable("product_id") Long productId) {
         return JsonData.buildSuccess(productService.detail(productId));
     }
+
+    @PostMapping("/lock_product")
+    public JsonData lockProduct(@RequestBody LockProductRequest lockProductRequest){
+        return productService.lockPeoduct(lockProductRequest);
+    }
+    
+
 }
 

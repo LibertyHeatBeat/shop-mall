@@ -1,7 +1,7 @@
 package com.buka.constant;
 
 /**
- * @author zhangyadong
+ * @author lhb
  * @version 1.0
  * @ClassName CacheKey
  * @date 2025/2/10 15:35

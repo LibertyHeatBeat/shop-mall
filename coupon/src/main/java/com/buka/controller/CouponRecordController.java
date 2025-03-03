@@ -1,6 +1,7 @@
 package com.buka.controller;
 
 
+import com.buka.request.LockCouponRecordRequest;
 import com.buka.request.NewUserCouponRequest;
 import com.buka.service.CouponRecordService;
 import com.buka.util.JsonData;
@@ -42,6 +43,18 @@ public class CouponRecordController {
     @PostMapping("/new_user_coupon")
     public JsonData newUserCoupon(@RequestBody NewUserCouponRequest newUserCouponRequest){
         return couponRecordService.newUserCoupon(newUserCouponRequest);
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 锁定优惠卷
+    * @DateTime: 下午8:26 2025/3/13
+    * @Params: [lockRecords]
+    * @Return com.buka.util.JsonData
+    */
+    @PostMapping("lock_records")
+    public JsonData lockRecords(@RequestBody LockCouponRecordRequest lockRecords) {
+        return couponRecordService.lockRecords(lockRecords);
     }
 }
 

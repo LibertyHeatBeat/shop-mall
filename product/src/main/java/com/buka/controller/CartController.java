@@ -6,6 +6,8 @@ import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author lhb
  * @version 1.0
@@ -77,5 +79,10 @@ public class CartController {
     @DeleteMapping("/delete/{product_id}")
     public JsonData deleteCart(@PathVariable("product_id") long productId) {
         return cartService.deleteCart(productId);
+    }
+
+    @PostMapping("/confirm_order_cart_items")
+    public JsonData confirmOrderCartItems(@RequestBody List<Long> productIdList) {
+        return cartService.confirmOrderCartItems(productIdList);
     }
 }

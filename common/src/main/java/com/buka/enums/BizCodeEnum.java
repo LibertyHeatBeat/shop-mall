@@ -43,7 +43,8 @@ public enum  BizCodeEnum {
     NOT_LOGIN(26001, "未登录"),
     SYSTEM_ERROR(26002,"系统错误"),
     CART_ITEM_NOT_EXIST(260003,"购物车商品不存在"),
-    ORDER_ERROR(260004,"订单错误");
+    ORDER_ERROR(260004,"订单错误"),
+    COUPON_LOCK_FAIL(260005, "优惠券锁定失败");
 
     @Getter
     private String message;

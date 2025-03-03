@@ -22,10 +22,10 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
         registry.addInterceptor(new LoginInterceptor())
                 //拦截的路径
-                .addPathPatterns("/api/order/*/**")
+                .addPathPatterns("/api/productOrder/*/**")
 
                 //排查不拦截的路径
-                .excludePathPatterns("/api/callback/*/**","/api/order/*/query_state");
+                .excludePathPatterns("/api/callback/*/**","/api/productOrder/*/query_state");
 
     }
 }

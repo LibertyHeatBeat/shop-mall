@@ -1,6 +1,7 @@
 package com.buka.controller;
 
 
+import com.buka.request.LockCouponRecordRequest;
 import com.buka.service.CouponService;
 import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;

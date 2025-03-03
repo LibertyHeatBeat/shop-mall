@@ -10,11 +10,7 @@ import com.buka.service.ProductOrderService;
 import com.buka.util.JsonData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +28,14 @@ import javax.servlet.http.HttpServletResponse;
 public class ProductOrderController {
     @Autowired
     private ProductOrderService productOrderService;
+    
+    /**
+    * @Author: lhb
+    * @Description: 
+    * @DateTime: 下午4:31 2025/3/3
+    * @Params: [confirmOrderDto, response]
+    * @Return void
+    */
     @PostMapping("/confirm")
     public void confirmOrder(@RequestBody ConfirmOrderDto confirmOrderDto, HttpServletResponse response) {
         JsonData jsonData = productOrderService.confirmOrder(confirmOrderDto);
@@ -65,6 +69,18 @@ public class ProductOrderController {
                 log.info(e.getMessage());
             }
         }
+    }
+
+    /**
+    * @Author: lhb
+    * @Description:
+    * @DateTime: 下午4:47 2025/3/9
+    * @Params: [outTradeNo]
+    * @Return com.buka.util.JsonData
+    */
+    @GetMapping("query_state")
+    public JsonData queryProductOrderState(@RequestParam("out_trade_no") String outTradeNo) {
+        return productOrderService.queryProductOrderState(outTradeNo);
     }
 }
 
