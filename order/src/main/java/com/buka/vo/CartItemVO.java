@@ -1,4 +1,4 @@
-package com.buka.model;
+package com.buka.vo;
 
 import java.math.BigDecimal;
 

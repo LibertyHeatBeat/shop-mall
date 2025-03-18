@@ -1,6 +1,7 @@
 package com.buka.service;
 
 import com.buka.dto.ConfirmOrderDto;
+import com.buka.model.OrderMessage;
 import com.buka.model.ProductOrderDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.buka.util.JsonData;
@@ -18,4 +19,6 @@ public interface ProductOrderService extends IService<ProductOrderDO> {
     JsonData confirmOrder(ConfirmOrderDto confirmOrderDto);
 
     JsonData queryProductOrderState(String outTradeNo);
+
+    boolean closeProductOrder(String outTradeNo);
 }

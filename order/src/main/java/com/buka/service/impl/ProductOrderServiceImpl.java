@@ -3,6 +3,8 @@ package com.buka.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.buka.config.RabbitMQConfig;
 import com.buka.dto.ConfirmOrderDto;
 import com.buka.enums.CouponStateEnum;
 import com.buka.enums.ProductOrderStateEnum;
@@ -20,8 +22,13 @@ import com.buka.service.ProductOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.buka.util.CommonUtil;
 import com.buka.util.JsonData;
+import com.buka.vo.CartItemVO;
+import com.buka.vo.CouponRecordVO;
 import com.buka.vo.LoginUser;
+import com.buka.vo.OrderAddrVo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +57,10 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     private ProductFeignService productFeignService;
     @Autowired
     private CouponFeignService couponFeignService;
+    @Autowired
+    private RabbitMQConfig rabbitMQConfig;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public JsonData confirmOrder(ConfirmOrderDto confirmOrderDto) {
@@ -79,7 +90,22 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         //创建订单项
         this.saveProductOrderItems(orderOutTradeNo, productOrderDO.getId(),voList);
 
+        //自动关单
+        this.sendDelayMessage(orderOutTradeNo);
         return null;
+    }
+
+    /**
+    * @Author: lhb
+    * @Description:自动关单方法
+    * @DateTime: 下午4:09 2025/3/18
+    * @Params: [orderOutTradeNo]
+    * @Return void
+    */
+    private void sendDelayMessage(String orderOutTradeNo) {
+        OrderMessage orderMessage=new OrderMessage();
+        orderMessage.setOutTradeNo(orderOutTradeNo);
+        rabbitTemplate.convertAndSend(rabbitMQConfig.getEventExchange(), rabbitMQConfig.getOrderCloseDelayRoutingKey(), orderMessage);
     }
 
     /**
@@ -200,7 +226,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     * @Description: 获取收货地址
     * @DateTime: 下午8:27 2025/3/13
     * @Params: [addressId]
-    * @Return com.buka.model.OrderAddrVo
+    * @Return com.buka.vo.OrderAddrVo
     */
     private OrderAddrVo getUserAddr(long addressId) {
         JsonData jsonData=userFeignService.find(addressId);
@@ -219,7 +245,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     * @Description: 
     * @DateTime: 下午8:27 2025/3/13
     * @Params: [productIdList]
-    * @Return java.util.List<com.buka.model.CartItemVO>
+    * @Return java.util.List<com.buka.vo.CartItemVO>
     */
     private List<CartItemVO> getProduct(List<Long> productIdList) {
         // 调用商品微服务接口，获取购物项和价格信息
@@ -320,5 +346,55 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         lambdaQueryWrapper.eq(ProductOrderDO::getOutTradeNo,outTradeNo);
         ProductOrderDO one = getOne(lambdaQueryWrapper);
         return one==null?JsonData.buildError("订单不存在"):JsonData.buildSuccess(one.getState());
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 关闭产品订单
+     * 该方法根据外部交易号（outTradeNo）查询订单，并根据订单状态决定是否关闭订单。
+     * 如果订单不存在，直接返回true。
+     * 如果订单已经支付，直接返回true。
+     * 如果订单未支付，则向第三方支付查询订单状态，并根据查询结果更新订单状态。
+    * @DateTime: 下午4:22 2025/3/18
+    * @Params: [orderMessage]
+    * @Return boolean
+    */
+    @Override
+    public boolean closeProductOrder(String outTradeNo) {
+        //根据外部交易号查询订单
+        LambdaQueryWrapper<ProductOrderDO> lambdaQueryWrapper=new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(ProductOrderDO::getOutTradeNo,outTradeNo);
+        ProductOrderDO prodOrderDO = getOne(lambdaQueryWrapper);
+        //如果订单不存在，直接返回true
+        if (prodOrderDO == null){
+            log.info("订单不存在");
+            return true;
+        }
+        //如果订单已经支付，记录日志并返回true
+        if (prodOrderDO.getState().equals(ProductOrderStateEnum.PAY.name())){
+            log.info("直接确认消息,订单已经支付:{}");
+            return true;
+        }
+        // 订单存在但未支付，向第三方支付查询订单状态
+        String payResult = "";
+        // TODO: 查询第三方支付结果，payResult==null表示未支付，payResult!=null表示已支付
+
+        // 如果支付结果为空，表示未支付成功，取消本地订单
+        if (StringUtils.isBlank(payResult)) {
+            log.info("取消订单");
+            LambdaUpdateWrapper<ProductOrderDO> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.eq(ProductOrderDO::getOutTradeNo, outTradeNo);
+            lambdaUpdateWrapper.set(ProductOrderDO::getState, ProductOrderStateEnum.CANCEL.name());
+            update(lambdaUpdateWrapper);
+            return true;
+        }else {
+            // 如果支付结果不为空，表示已支付，更新订单状态为已支付
+            LambdaUpdateWrapper<ProductOrderDO> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.eq(ProductOrderDO::getOutTradeNo, outTradeNo);
+            lambdaUpdateWrapper.set(ProductOrderDO::getState, ProductOrderStateEnum.PAY.name());
+            update(lambdaUpdateWrapper);
+            return true;
+        }
+
     }
 }
