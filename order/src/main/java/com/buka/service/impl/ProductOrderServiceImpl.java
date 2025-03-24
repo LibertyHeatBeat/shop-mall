@@ -5,15 +5,20 @@ import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.buka.config.RabbitMQConfig;
+import com.buka.constant.CacheKey;
 import com.buka.dto.ConfirmOrderDto;
+import com.buka.dto.PayInfoDTO;
 import com.buka.enums.CouponStateEnum;
 import com.buka.enums.ProductOrderStateEnum;
+import com.buka.enums.BizCodeEnum;
+import com.buka.exception.BizException;
 import com.buka.feign.CouponFeignService;
 import com.buka.feign.ProductFeignService;
 import com.buka.feign.UserFeignService;
 import com.buka.interceptor.LoginInterceptor;
 import com.buka.model.*;
 import com.buka.mapper.ProductOrderMapper;
+import com.buka.pay.PayFactory;
 import com.buka.request.LockCouponRecordRequest;
 import com.buka.request.LockProductRequest;
 import com.buka.request.OrderItemRequest;
@@ -30,11 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -61,10 +70,33 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     private RabbitMQConfig rabbitMQConfig;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private PayFactory payFactory;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
+    /**
+    * @Author: lhb
+    * @Description: 提交订单实现方法
+    * @DateTime: 下午4:23 2025/3/23
+    * @Params: [confirmOrderDto]
+    * @Return com.buka.util.JsonData
+    */
     @Override
     public JsonData confirmOrder(ConfirmOrderDto confirmOrderDto) {
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
+        // 校验令牌 防止重复提交
+        String orderToken = confirmOrderDto.getToken();
+        if(StringUtils.isBlank(orderToken)){
+            throw new BizException(BizCodeEnum.ORDER_CONFIRM_TOKEN_NOT_EXIST);
+        }
+        //原子操作 校验令牌，删除令牌
+        String script = "if redis.call('get',KEYS[1]) == ARGV[1] " +
+                "then return redis.call('del',KEYS[1]) else return 0 end";
+        Long result = redisTemplate.execute(new DefaultRedisScript<>(script,Long.class), Arrays.asList(String.format(CacheKey.SUBMIT_ORDER_TOKEN_KEY,loginUser.getId())),orderToken);
+        if(result == 0L){
+            throw new BizException(BizCodeEnum.ORDER_CONFIRM_TOKEN_EQUAL_FAIL);
+        }
         //生成订单
         String orderOutTradeNo = CommonUtil.getStringNumRandom(32);
 
@@ -92,6 +124,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
         //自动关单
         this.sendDelayMessage(orderOutTradeNo);
+
         return null;
     }
 
@@ -133,7 +166,6 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         // 批量保存商品订单项到数据库
         productOrderItemService.saveBatch(productOrderDOList);
     }
-
 
     /**
     * @Author: lhb
@@ -240,6 +272,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         return orderAddrVo;
 
     }
+
     /**
     * @Author: lhb
     * @Description: 
@@ -263,6 +296,13 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         return productVoList;
     }
 
+    /**
+    * @Author: lhb
+    * @Description: 校验订单价格
+    * @DateTime: 下午2:29 2025/3/24
+    * @Params: [confirmOrderDto, voList]
+    * @Return void
+    */
     private void checkPrice(ConfirmOrderDto confirmOrderDto, List<CartItemVO> voList) {
         //最新总金额
         BigDecimal totalAmount = new BigDecimal("0");
@@ -296,6 +336,14 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         }
 
     }
+
+    /**
+    * @Author: lhb
+    * @Description: 远程调用优惠卷
+    * @DateTime: 下午2:29 2025/3/24
+    * @Params: [couponRecordId]
+    * @Return com.buka.vo.CouponRecordVO
+    */
     private CouponRecordVO getCartCouponRecord(Long couponRecordId) {
 
         // 检查优惠券记录ID是否有效
@@ -333,6 +381,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
         return couponRecordVO;
     }
+
     /**
     * @Author: lhb
     * @Description: 查询订单状态
@@ -376,9 +425,12 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             return true;
         }
         // 订单存在但未支付，向第三方支付查询订单状态
-        String payResult = "";
-        // TODO: 查询第三方支付结果，payResult==null表示未支付，payResult!=null表示已支付
-
+        PayInfoDTO payInfoDTO = new PayInfoDTO();
+        payInfoDTO.setOutTradeNo(outTradeNo);
+        payInfoDTO.setPayType(prodOrderDO.getPayType());
+        String flag = payFactory.queryPaySuccess(payInfoDTO);
+        //payResult==null表示未支付，payResult!=null表示已支付
+        String payResult = flag;
         // 如果支付结果为空，表示未支付成功，取消本地订单
         if (StringUtils.isBlank(payResult)) {
             log.info("取消订单");
@@ -396,5 +448,29 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             return true;
         }
 
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 处理订单回调消息，根据交易状态更新订单状态
+    * @DateTime: 下午3:27 2025/3/24
+    * @Params: [paramsMap]
+    * @Return boolean
+    */
+    @Override
+    public boolean handlerOrderCallbackMsg(Map<String, String> paramsMap) {
+        //从参数映射中获取订单号和交易状态
+        String out_trade_no = paramsMap.get("out_trade_no");
+        String trade_status = paramsMap.get("trade_status");
+
+        //如果交易成功，更新订单状态
+        if (trade_status.equals("TRADE_SUCCESS")) {
+            LambdaUpdateWrapper<ProductOrderDO> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.eq(ProductOrderDO::getOutTradeNo, out_trade_no);
+            lambdaUpdateWrapper.set(ProductOrderDO::getState, ProductOrderStateEnum.PAY.name());
+            update(lambdaUpdateWrapper);
+            return true;
+        }
+        return false;
     }
 }

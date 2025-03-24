@@ -6,6 +6,8 @@ import com.buka.model.ProductOrderDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.buka.util.JsonData;
 
+import java.util.Map;
+
 /**
  * <p>
  *  服务类
@@ -21,4 +23,6 @@ public interface ProductOrderService extends IService<ProductOrderDO> {
     JsonData queryProductOrderState(String outTradeNo);
 
     boolean closeProductOrder(String outTradeNo);
+
+    boolean handlerOrderCallbackMsg(Map<String, String> paramsMap);
 }

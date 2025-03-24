@@ -63,3 +63,9 @@ mqconfig:
 
   #消息过期时间,毫秒,测试改为15秒
   ttl: 15000
+
+#支付宝支付获取相关配置
+aibabaPay:
+  # 支付宝公钥
+  alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9KImMApadUDjRtsSQ4CrzuTYUUyZe+dNnKpUFvj5jYtQsXuUDQBDBZeE2BGaE5woONYaUVcszVmGtDkMd4sI7xh9SF1LU1z1YoR3tr0UWFH6YY+07JFjgfRF75U+qrXN1qxBFahMYq1CGl9PX2Hfxa/JcHtnRoaR34H4exSESl9qPXxmqnq2l3934UkDr5pQIyHYGcI0xqyx+HmGPLZmVMVQ0fbSuJwbQZhIHRzr73tc+1ANQGVN9mBVudoVLgKNojtFmAaBYU4Tn5qL9Dx/RqgAmzg0n8f5kCcywPIEHMSwjzbSWErdY9nzibRIxDMQFy3VrgbDymC9y4Rtq8HdpQIDAQAB
+
