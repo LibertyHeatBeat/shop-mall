@@ -3,13 +3,10 @@ package com.buka.controller;
 
 import com.buka.dto.AddressAddDto;
 import com.buka.enums.BizCodeEnum;
-import com.buka.model.AddressDO;
 import com.buka.service.AddressService;
 import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * <p>
@@ -20,7 +17,7 @@ import java.util.List;
  * @since 2025-02-09
  */
 @RestController
-@RequestMapping("/addressDO")
+@RequestMapping("/api/address/v1")
 public class AddressController {
 
     @Autowired

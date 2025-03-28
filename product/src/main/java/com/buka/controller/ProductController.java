@@ -1,11 +1,14 @@
 package com.buka.controller;
 
 
+import com.buka.model.ProductDO;
 import com.buka.request.LockProductRequest;
 import com.buka.service.ProductService;
 import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 /**
  * <p>
@@ -44,11 +47,43 @@ public class ProductController {
         return JsonData.buildSuccess(productService.detail(productId));
     }
 
+    /**
+    * @Author: lhb
+    * @Description: 锁定商品库存
+    * @DateTime: 下午7:24 2025/3/26
+    * @Params: [lockProductRequest]
+    * @Return com.buka.util.JsonData
+    */
     @PostMapping("/lock_product")
     public JsonData lockProduct(@RequestBody LockProductRequest lockProductRequest){
         return productService.lockPeoduct(lockProductRequest);
     }
-    
 
+    /**
+    * @Author: lhb
+    * @Description: 添加产品信息
+    * @DateTime: 上午10:43 2025/3/28
+    * @Params: [productDO]
+    * @Return com.buka.util.JsonData
+    */
+    @PostMapping("/add_product")
+    public JsonData addProduct(@RequestBody ProductDO productDO) {
+        return productService.addProduct(productDO);
+    }
+
+    /**
+    * @Author: lhb
+    * @Description: 商品搜索
+    * @DateTime: 上午10:54 2025/3/28
+    * @Params: [keyword, minPrice, maxPrice]
+    * @Return com.buka.util.JsonData
+    */
+    @GetMapping("search")
+    public JsonData search(@RequestParam(required = false) String keyword,
+                           @RequestParam(required = false) BigDecimal minPrice,
+                           @RequestParam(required = false) BigDecimal maxPrice){
+        return productService.searchProducts(keyword, minPrice, maxPrice);
+
+    }
 }
 

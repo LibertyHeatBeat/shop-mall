@@ -6,6 +6,8 @@ import com.buka.model.ProductMessage;
 import com.buka.request.LockProductRequest;
 import com.buka.util.JsonData;
 
+import java.math.BigDecimal;
+
 /**
  * <p>
  *  服务类
@@ -23,4 +25,8 @@ public interface ProductService extends IService<ProductDO> {
     JsonData lockPeoduct(LockProductRequest lockProductRequest);
 
     boolean releaseProductStock(ProductMessage productMessage);
+
+    JsonData addProduct(ProductDO productDO);
+
+    JsonData searchProducts(String keyword, BigDecimal minPrice, BigDecimal maxPrice);
 }

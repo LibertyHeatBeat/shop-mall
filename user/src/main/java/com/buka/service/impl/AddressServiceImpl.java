@@ -38,18 +38,31 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, AddressDO> im
     */
     @Override
     public JsonData add(AddressAddDto addressAddDto) {
+        //准备数据
         AddressDO addressDO = new AddressDO();
         BeanUtils.copyProperties(addressAddDto, addressDO);
+
         addressDO.setUserId(LoginInterceptor.threadLocal.get().getId());
+//        addressDO.setUserId(1L);
+
         addressDO.setCreateTime(new Date());
+        //检查是否设置为默认地址
         if (addressAddDto.getDefaultStatus()==1){
+            //这是默认地址
+            //更新当前用户的其他默认地址，将它们的默认状态取消
             LambdaUpdateWrapper<AddressDO> lambdaUpdateWrapper=new LambdaUpdateWrapper<>();
+
             lambdaUpdateWrapper.eq(AddressDO::getUserId,LoginInterceptor.threadLocal.get().getId());
+//            lambdaUpdateWrapper.eq(AddressDO::getUserId,1L);
+
             lambdaUpdateWrapper.eq(AddressDO::getDefaultStatus,1);
             lambdaUpdateWrapper.set(AddressDO::getDefaultStatus,0);
             update(lambdaUpdateWrapper);
         }
+
+        //保存地址信息
         boolean save = save(addressDO);
+        //返回成功响应
         return JsonData.buildSuccess();
     }
 
