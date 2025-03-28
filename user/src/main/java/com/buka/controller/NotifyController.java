@@ -100,25 +100,35 @@ public class NotifyController {
 
     /**
      * @description:向邮箱发送验证码并验证
-     * @param email
+     * @param
      * @param captcha
      * @param request
      * @return
      */
     @GetMapping("/send_codes")
-    public JsonData sendCode(@RequestParam(value = "email", required = true) String email,
+    public JsonData sendCode(@RequestParam(value = "to", required = true) String to,
                              @RequestParam(value = "captcha", required = true) String captcha,
-                             HttpServletRequest request){
-        //1,获取redis中的验证码
+                             HttpServletRequest request) {
+
+        // 获取验证码的缓存键
         String key = getCaptchhakey(request);
+        // 从缓存中获取验证码
         String code = redisTemplate.opsForValue().get(key);
-        log.info(email+captcha);
-        //2,验证验证码
+        // 记录日志，方便调试
+        log.info(to+captcha);
+
+        // 验证用户输入的验证码与缓存中的验证码是否匹配，不区分大小写
         if (code != null && captcha != null && code.equalsIgnoreCase(captcha)) {
+            // 验证输入的对
+            // 删除缓存中的验证码，避免重复使用
             redisTemplate.delete(key);
-            JsonData jsonData= notifyService.sendCode(email);
+
+            // 调用服务发送验证码，并返回发送结果
+            JsonData jsonData= notifyService.sendCode(to);
+
             return jsonData;
         } else {
+            // 验证码验证失败，返回相应的错误信息
             return JsonData.buildResult(BizCodeEnum.CODE_CAPTCHA);
         }
     }

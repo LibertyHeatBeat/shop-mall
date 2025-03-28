@@ -32,6 +32,11 @@ spring:
       simple:
         acknowledge-mode: manual
 
+  # es配置
+  elasticsearch:
+      rest:
+        uris: http://192.168.26.128:9200
+
 # 配置plus打印sql日志
 mybatis-plus:
   configuration:

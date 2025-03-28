@@ -38,7 +38,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             if (claims != null) {
                 //将用户信息放入ThreadLocal
                 LoginUser loginUser = new LoginUser();
-                loginUser.setId(claims.get("id", Long.class));
+                loginUser.setId(claims.get("id", Integer.class).longValue());
                 loginUser.setName(claims.get("name", String.class));
                 loginUser.setHeadImg(claims.get("headImg", String.class));
                 loginUser.setMail(claims.get("mail",String.class));
