@@ -59,25 +59,47 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
      * @Author: lhb
      * @Description: 分页查询已发布的优惠券
      * @DateTime: 上午11:35 2025/2/15
-     * @Params: [page, size]
-     * @Return com.buka.util.JsonData
+     * @Params:
+     *   page - 当前页码，表示要查询的页数
+     *   size - 每页显示的记录数，表示每页要返回的优惠券数量
+     * @Return com.buka.util.JsonData - 返回一个包含分页查询结果的JsonData对象，其中包含优惠券列表、总记录数和总页数等信息
      */
     @Override
     public JsonData pageCoupon(long page, long size) {
+        // 创建分页对象，设置当前页码和每页记录数
         Page<CouponDO> page1 = new Page<>(page, size);
+
+        // 创建Lambda查询条件构造器，用于构建查询条件
         LambdaQueryWrapper<CouponDO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+        // 设置查询条件：只查询已发布的优惠券
         lambdaQueryWrapper.eq(CouponDO::getPublish, CouponPublishEnum.PUBLISH);
+
+        // 设置排序条件：按创建时间降序排列
         lambdaQueryWrapper.orderByDesc(CouponDO::getCreateTime);
+
+        // 执行分页查询，获取分页结果
         this.page(page1, lambdaQueryWrapper);
+
+        // 从分页结果中获取当前页的优惠券记录
         List<CouponDO> records = page1.getRecords();
+
+        // 获取总记录数
         Long total = page1.getTotal();
+
+        // 获取总页数
         Long pages = page1.getPages();
+
+        // 创建自定义分页对象，用于封装分页查询结果
         CouponPage<CouponDO> couponPage = new CouponPage<>();
         couponPage.setRecords(records);
         couponPage.setTotal(total);
         couponPage.setSize(pages);
+
+        // 返回成功响应，包含分页查询结果
         return JsonData.buildSuccess(couponPage);
     }
+
 
     /**
     * @Author: lhb
@@ -89,7 +111,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, CouponDO> imple
     @Override
     @Transactional(rollbackFor = Exception.class)
     public JsonData addPromotion(Long couponId) {
-
+        // 获取分布式锁，防止并发领取优惠券
         RLock lock = redissonClient.getLock("lock:coupon:" + couponId);
         lock.lock(10,TimeUnit.SECONDS);
         log.info("加锁成功");

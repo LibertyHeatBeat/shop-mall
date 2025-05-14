@@ -24,6 +24,7 @@ import java.io.IOException;
 public class ProductStockMQListener {
     @Autowired
     private ProductService productService;
+
     @RabbitHandler
     public void handle(ProductMessage productMessage, Message message, Channel channel) throws IOException {
         // 记录接收到的消息内容

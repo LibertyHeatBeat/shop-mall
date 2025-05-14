@@ -25,7 +25,7 @@ public class ProductController {
     private ProductService productService;
     /**
     * @Author: lhb
-    * @Description: 分页查询
+    * @Description: 分页查询商品
     * @DateTime: 下午4:13 2025/2/17
     * @Params: [page, size]
     * @Return JsonData
@@ -61,7 +61,7 @@ public class ProductController {
 
     /**
     * @Author: lhb
-    * @Description: 添加产品信息
+    * @Description: 添加商品品信息
     * @DateTime: 上午10:43 2025/3/28
     * @Params: [productDO]
     * @Return com.buka.util.JsonData

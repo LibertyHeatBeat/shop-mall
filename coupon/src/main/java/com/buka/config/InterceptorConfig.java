@@ -22,7 +22,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor())
-                .addPathPatterns("/api/coupon_record/*/**")
+                .addPathPatterns("/api/couponRecord/*/**")
                 .addPathPatterns("/api/coupon/*/**")
                 .excludePathPatterns("/api/coupon/*/page_coupon","/api/coupon/*/new_user_coupon");
 

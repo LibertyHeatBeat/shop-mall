@@ -17,6 +17,7 @@
         <module>order</module>
         <module>coupon</module>
         <module>product</module>
+        <module>gateway</module>
     </modules>
 
 

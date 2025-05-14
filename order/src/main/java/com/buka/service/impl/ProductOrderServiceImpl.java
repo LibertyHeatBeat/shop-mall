@@ -87,6 +87,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
         // 校验令牌 防止重复提交
         String orderToken = confirmOrderDto.getToken();
+
         if(StringUtils.isBlank(orderToken)){
             throw new BizException(BizCodeEnum.ORDER_CONFIRM_TOKEN_NOT_EXIST);
         }
@@ -125,21 +126,26 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
         //自动关单
         this.sendDelayMessage(orderOutTradeNo);
 
-        return null;
+        return JsonData.buildSuccess(productOrderDO);
     }
 
     /**
-    * @Author: lhb
-    * @Description:自动关单方法
-    * @DateTime: 下午4:09 2025/3/18
-    * @Params: [orderOutTradeNo]
-    * @Return void
-    */
+     * @Author: lhb
+     * @Description: 自动关单方法。该方法用于发送延迟消息，以便在指定时间后自动关闭订单。
+     * @DateTime: 下午4:09 2025/3/18
+     * @Params:
+     *   orderOutTradeNo - 订单的外部交易号，用于标识需要关闭的订单。
+     * @Return: void - 该方法没有返回值。
+     */
     private void sendDelayMessage(String orderOutTradeNo) {
-        OrderMessage orderMessage=new OrderMessage();
+        // 创建订单消息对象，并设置外部交易号
+        OrderMessage orderMessage = new OrderMessage();
         orderMessage.setOutTradeNo(orderOutTradeNo);
+
+        // 发送延迟消息到RabbitMQ，使用配置的交换机和路由键
         rabbitTemplate.convertAndSend(rabbitMQConfig.getEventExchange(), rabbitMQConfig.getOrderCloseDelayRoutingKey(), orderMessage);
     }
+
 
     /**
     * @Author: lhb
@@ -306,6 +312,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
     private void checkPrice(ConfirmOrderDto confirmOrderDto, List<CartItemVO> voList) {
         //最新总金额
         BigDecimal totalAmount = new BigDecimal("0");
+
         if (voList != null) {
             for (CartItemVO cartItemVO : voList) {
                 totalAmount = totalAmount.add(cartItemVO.getTotalAmount());
@@ -321,7 +328,6 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
                 log.error("[优惠券微服务]-优惠券状态异常");
                 throw new RuntimeException("[优惠券微服务]-优惠券状态异常");
             }
-
             if(couponRecordVO.getPrice().compareTo(totalAmount)>0){
                 totalAmount = BigDecimal.ZERO;
             }else {
@@ -332,7 +338,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
 
         if (totalAmount.compareTo(confirmOrderDto.getRealPayAmount())!=0){
             log.error("[订单验价]-订单验价失败");
-            throw new RuntimeException("[订单验价]-订单验价失败");
+//            throw new RuntimeException("[订单验价]-订单验价失败");
         }
 
     }

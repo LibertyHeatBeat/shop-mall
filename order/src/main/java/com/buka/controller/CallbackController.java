@@ -33,17 +33,25 @@ public class CallbackController {
     /**
     * @Author: lhb
     * @Description: 处理支付宝回调消息请求
+    *              该函数接收支付宝的回调请求，验证请求的签名，并根据验证结果处理订单回调消息。
+    *              如果签名验证成功且订单处理成功，则返回"success"；否则返回"failure"。
     * @DateTime: 下午3:29 2025/3/24
-    * @Params: [request]
-    * @Return java.lang.String
+    * @Params: [request] HttpServletRequest对象，包含支付宝回调请求的所有参数。
+    * @Return java.lang.String 返回处理结果，"success"表示处理成功，"failure"表示处理失败。
     */
     @PostMapping("/alipay")
     public String allipay(HttpServletRequest request){
+        // 将请求参数转换为Map，方便后续处理
         Map<String,String> paramsMap =  convertRequestParamsToMap(request);
         log.info("支付宝回调通知结果:{}",paramsMap);
+
+        // 初始化签名验证标志
         boolean signVerified = false;
         try {
+            // 使用支付宝公钥验证请求的签名
             signVerified = AlipaySignature.rsaCheckV1(paramsMap, ALIPAY_PUBLIC_KEY, "UTF-8", "RSA2");
+
+            // 如果签名验证成功，处理订单回调消息
             if (signVerified) {
                 System.out.println("签名验证成功");
                 boolean flag = productOrderService.handlerOrderCallbackMsg(paramsMap);
@@ -51,14 +59,18 @@ public class CallbackController {
                     return "success";
                 }
             } else {
+                // 签名验证失败，返回"failure"
                 System.out.println("签名验证失败");
                 return "failure";
             }
         } catch (AlipayApiException e) {
+            // 捕获并打印异常信息
             e.printStackTrace();
         }
+        // 默认返回"failure"
         return "failure";
     }
+
 
     /**
     * @Author: lhb

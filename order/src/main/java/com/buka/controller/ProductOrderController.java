@@ -46,19 +46,25 @@ public class ProductOrderController {
     * @Author: lhb
     * @Description: 提交订单
     * @DateTime: 下午4:31 2025/3/3
-    * @Params: [confirmOrderDto, response]
+    * @Params:
+    *   confirmOrderDto - 包含订单确认信息的DTO对象，包括客户端类型、支付类型、总金额等
+    *   response - HttpServletResponse对象，用于向客户端返回响应
     * @Return void
     */
     @PostMapping("/confirm")
     public void confirmOrder(@RequestBody ConfirmOrderDto confirmOrderDto, HttpServletResponse response) {
+        // 调用服务层确认订单，并获取返回的JsonData对象
         JsonData jsonData = productOrderService.confirmOrder(confirmOrderDto);
+        // 如果订单确认成功
         if (jsonData.getCode() == 0) {
             String client = confirmOrderDto.getClientType();
             String payType = confirmOrderDto.getPayType();
+
+            // 根据支付类型进行不同的处理
             if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.ALIPAY.name())) {
-                //支付宝支付
+                // 支付宝支付
                 if (client.equalsIgnoreCase(ClientType.H5.name())) {
-                    //h5支付
+                    // H5支付
                     PayInfoDTO payInfoDTO = new PayInfoDTO();
                     payInfoDTO.setClientType(client);
                     payInfoDTO.setPayFee(confirmOrderDto.getTotalAmount());
@@ -66,26 +72,26 @@ public class ProductOrderController {
                     payInfoDTO.setOutTradeNo(jsonData.getData().toString());
                     payInfoDTO.setPayType(confirmOrderDto.getPayType());
 
-
+                    // 调用支付工厂生成支付页面
                     String from = payFactory.pay(payInfoDTO);
 
-                    //将支付页面放到redis  用于重新支付
-                    redisTemplate.opsForValue().set(jsonData.getData().toString(),from, 14, TimeUnit.MINUTES);
-                    // 返回支付页面
-                    writeData(response,from);
-                }else if (client.equalsIgnoreCase(ClientType.APP.name())) {
-                    //app支付
+                    // 将支付页面信息存入Redis，用于重新支付
+                    redisTemplate.opsForValue().set(jsonData.getData().toString(), from, 14, TimeUnit.MINUTES);
+
+                    // 返回支付页面给客户端
+                    writeData(response, from);
+                } else if (client.equalsIgnoreCase(ClientType.APP.name())) {
+                    // APP支付
                 } else if (client.equalsIgnoreCase(ClientType.PC.name())) {
-                    //pc支付
+                    // PC支付
                 }
             } else if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.WECHAT.name())) {
-                //微信支付
+                // 微信支付
             } else if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.BANK.name())) {
-                //银行卡支付
+                // 银行卡支付
             }
-
         } else {
-            //创建订单失败
+            // 订单创建失败时的处理
             try {
                 // 记录错误日志并返回错误信息
                 log.error("创建订单失败{}", jsonData.toString());
@@ -130,35 +136,52 @@ public class ProductOrderController {
         return productOrderService.queryProductOrderState(outTradeNo);
     }
     /**
-    * @Author: lhb
-    * @Description: 重新支付方法
-    * @DateTime: 下午1:52 2025/3/24
-    * @Params:
-    * @Return
-    */
+     * @Author: lhb
+     * @Description: 重新支付方法。该方法用于根据订单号查询支付状态，并返回相应的支付结果。
+     *               如果订单号在Redis中存在对应的支付信息，则返回成功信息；否则返回订单支付超时的错误信息。
+     * @DateTime: 下午1:52 2025/3/24
+     * @Params: outTradeNo - 订单号，用于查询支付状态。
+     * @Return: JsonData - 返回支付结果的JSON数据。如果支付信息存在，返回成功信息；否则返回支付超时错误信息。
+     */
     @GetMapping("repay")
     public JsonData repay(@RequestParam("out_trade_no") String outTradeNo) {
+        // 从Redis中获取订单号对应的支付信息
         String from = redisTemplate.opsForValue().get(outTradeNo);
+
+        // 如果支付信息存在，返回成功信息
         if (from != null) {
             return JsonData.buildSuccess(from);
         }
+
+        // 如果支付信息不存在，返回订单支付超时的错误信息
         return JsonData.buildResult(BizCodeEnum.ORDER_PAY_TIME_OUT);
     }
 
+
     /**
-    * @Author: lhb
-    * @Description: 对支付发放token防止重复提交
-    * @DateTime: 下午3:52 2025/3/24
-    * @Params: []
-    * @Return com.buka.util.JsonData
-    */
+     * @Author: lhb
+     * @Description: 生成并返回一个用于支付提交的Token，以防止重复提交。该Token会被存储在Redis中，有效期为20分钟。
+     * @DateTime: 下午3:52 2025/3/24
+     * @Params: [] 无参数
+     * @Return com.buka.util.JsonData 返回一个包含生成的Token的JsonData对象
+     */
     @GetMapping("get_token")
     public JsonData getToken() {
+        // 生成一个32位的随机字符串作为Token
         String stringNumRandom = CommonUtil.getStringNumRandom(32);
+
+        // 从线程局部变量中获取当前登录用户信息
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
+
+        // 根据用户ID生成Redis中的Key
         String key= String.format(CacheKey.SUBMIT_ORDER_TOKEN_KEY, loginUser.getId());
+
+        // 将生成的Token存储到Redis中，并设置有效期为20分钟
         redisTemplate.opsForValue().set(key, stringNumRandom, 20, TimeUnit.MINUTES);
+
+        // 返回包含生成的Token的JsonData对象
         return JsonData.buildSuccess(stringNumRandom);
     }
+
 }
 

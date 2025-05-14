@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RabbitListener(queues = "${order_close_queue}")
+@RabbitListener(queues = "${mqconfig.order_close_queue}")
 public class ProductOrderMQListener {
     @Autowired
     private ProductOrderService productOrderService;

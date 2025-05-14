@@ -77,6 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     @GlobalTransactional
     public JsonData register(UserRegisterDto userRegisterDto) {
+        // 检查验证码是否正确
         boolean checkCode = false;
         if (StringUtils.isNotBlank(userRegisterDto.getMail())) {
             checkCode = notifyService.checkCode(userRegisterDto.getMail(), userRegisterDto.getCode());
@@ -84,14 +85,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (!checkCode) {
             return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
         }
+
+        // 将用户注册信息复制到用户数据对象中，并生成密码的加密盐值
         UserDO userDO = new UserDO();
         BeanUtils.copyProperties(userRegisterDto, userDO);
         userDO.setSecret("$1$"+CommonUtil.getStringNumRandom(8));
         String s = Md5Crypt.md5Crypt(userDO.getPwd().getBytes(), userDO.getSecret());
         userDO.setPwd(s);
+
+        // 检查邮箱是否唯一，如果唯一则保存用户信息并发放优惠券
         if (checkUnique(userRegisterDto.getMail())) {
             this.save(userDO);
-            //TODO  发放优惠卷 远程调用
             NewUserCouponRequest newUserCouponRequest=new NewUserCouponRequest();
             newUserCouponRequest.setUserId(userDO.getId());
             newUserCouponRequest.setName(userDO.getName());

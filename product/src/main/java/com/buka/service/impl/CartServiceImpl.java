@@ -60,8 +60,10 @@ public class CartServiceImpl implements CartService {
         if (o!=null){
             result=(String) o;
         }
+
         // 判断购物车中是否存在该商品
         if (StringUtils.isBlank(result)){
+            // 如果购物车中不存在该商品，则创建新的购物车项
             CartItemDO cartItemDO=new CartItemDO();
             ProductDO productDO = productService.getById(productId);
             if (productDO==null) {
@@ -74,6 +76,7 @@ public class CartServiceImpl implements CartService {
             cartItemDO.setProductTitle(productDO.getTitle());
             myCartOps.put(productId+"", JSON.toJSONString(cartItemDO));
         }else {
+            // 如果购物车中已存在该商品，则增加其购买数量
             CartItemDO cartItemDO = JSON.parseObject(result, CartItemDO.class);
             cartItemDO.setBuyNum(cartItemDO.getBuyNum()+buyNum);
             myCartOps.put(productId+"",JSON.toJSONString(cartItemDO));
@@ -213,6 +216,13 @@ public class CartServiceImpl implements CartService {
             cartItemDO.setProductImage(productDO.getCoverImg());
         }
     }
+    /**
+    * @Author: lhb
+    * @Description: 购物项和价格信息
+    * @DateTime: 下午8:00 2025/4/20
+    * @Params: [productIdList]
+    * @Return com.buka.util.JsonData
+    */
     @Override
     public JsonData confirmOrderCartItems(List<Long> productIdList) {
         List<CartItemDO> cartItemDOList = buildCartItem(true);

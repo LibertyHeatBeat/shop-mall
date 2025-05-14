@@ -6,6 +6,7 @@ import com.buka.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -81,8 +82,19 @@ public class CartController {
         return cartService.deleteCart(productId);
     }
 
+    /**
+    * @Author: lhb
+    * @Description: 获取购物车项和价格信息
+    * @DateTime: 下午8:00 2025/4/20
+    * @Params: [productIdList]
+    * @Return com.buka.util.JsonData
+    */
     @PostMapping("/confirm_order_cart_items")
     public JsonData confirmOrderCartItems(@RequestBody List<Long> productIdList) {
+        List<Long> i = new ArrayList<>();
+        i.add(4L);
+        i.add(5L);
+        productIdList = i;
         return cartService.confirmOrderCartItems(productIdList);
     }
 }

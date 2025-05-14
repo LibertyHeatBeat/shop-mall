@@ -22,6 +22,13 @@ public class CouponRecordController {
     @Autowired
     private CouponRecordService couponRecordService;
 
+    /**
+    * @Author: lhb
+    * @Description: 分页个人查询优惠卷
+    * @DateTime: 下午3:00 2025/4/20
+    * @Params: [page, size]
+    * @Return com.buka.util.JsonData
+    */
     @GetMapping("page_couponRecord")
     public JsonData pageCouponRecord(@RequestParam(value = "page") long page,
                                      @RequestParam(value = "size") long size) {
@@ -40,6 +47,13 @@ public class CouponRecordController {
         return couponRecordService.detail(recordId);
     }
 
+    /**
+    * @Author: lhb
+    * @Description: 新人发放优惠卷锁定优惠卷
+    * @DateTime: 下午7:47 2025/4/20
+    * @Params: [newUserCouponRequest]
+    * @Return com.buka.util.JsonData
+    */
     @PostMapping("/new_user_coupon")
     public JsonData newUserCoupon(@RequestBody NewUserCouponRequest newUserCouponRequest){
         return couponRecordService.newUserCoupon(newUserCouponRequest);

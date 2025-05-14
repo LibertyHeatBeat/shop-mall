@@ -1,0 +1,42 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.26.128:8848
+    gateway: #路由规格
+      routes:
+        - id: product_route  # 路由规则id
+          uri: lb://product-service  # lb：负载均衡 路由规则
+          order: 1  #优先级
+          predicates:
+            - Path=/product-service/**
+          filters: #过滤器，请求在传递过程中通过过滤器修改
+            - StripPrefix=1 #去掉第一层前缀，转发给后续的路径
+
+        - id: user_route  # 路由规则id
+          uri: lb://user-service  # lb：负载均衡 路由规则
+          order: 2  #优先级
+          predicates:
+            - Path=/user-service/**
+          filters: #过滤器，请求在传递过程中通过过滤器修改
+            - StripPrefix=1 #去掉第一层前缀，转发给后续的路径
+
+
+# 配置plus打印sql日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+# 设置日志级别,ERROR/WARN/INFO/DEBUG,默认是INFO以上才显示
+logging:
+  level:
+    root: INFO
+
+
+
